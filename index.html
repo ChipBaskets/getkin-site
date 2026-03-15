@@ -23,7 +23,6 @@
     --cyan: #22d3ee;
     --purple: #a78bfa;
     --prompt: #4ade80;
-    --cursor-blink: 1s;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,314 +37,128 @@
     overflow-x: hidden;
   }
 
-  /* Scanline overlay */
   body::after {
     content: '';
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.03) 2px,
-      rgba(0,0,0,0.03) 4px
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
     );
     pointer-events: none;
     z-index: 1000;
   }
 
-  .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px 24px;
-  }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
 
-  /* Header */
-  .header {
-    margin-bottom: 48px;
-    animation: fadeIn 0.6s ease;
-  }
+  .header { margin-bottom: 48px; animation: fadeIn 0.6s ease; }
 
-  .prompt-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-  }
-
-  .prompt-symbol {
-    color: var(--prompt);
-    font-weight: 700;
-    font-size: 14px;
-  }
-
-  .command {
-    color: var(--text-bright);
-    font-weight: 500;
-    font-size: 14px;
-  }
-
+  .prompt-line { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .prompt-symbol { color: var(--prompt); font-weight: 700; font-size: 14px; }
+  .command { color: var(--text-bright); font-weight: 500; font-size: 14px; }
   .cursor {
-    display: inline-block;
-    width: 8px;
-    height: 16px;
-    background: var(--prompt);
-    animation: blink var(--cursor-blink) step-end infinite;
-    vertical-align: middle;
-    margin-left: 2px;
+    display: inline-block; width: 8px; height: 16px;
+    background: var(--prompt); animation: blink 1s step-end infinite;
+    vertical-align: middle; margin-left: 2px;
   }
+  @keyframes blink { 50% { opacity: 0; } }
 
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
+  .title { font-size: 32px; font-weight: 700; color: var(--text-bright); letter-spacing: -1px; margin: 16px 0 8px 0; }
+  .title span { color: var(--green); }
+  .subtitle { color: var(--text-dim); font-size: 13px; font-weight: 300; max-width: 560px; }
 
-  .title {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--text-bright);
-    letter-spacing: -1px;
-    margin: 16px 0 8px 0;
-  }
-
-  .title span {
-    color: var(--green);
-  }
-
-  .subtitle {
-    color: var(--text-dim);
-    font-size: 13px;
-    font-weight: 300;
-    max-width: 560px;
-  }
-
-  /* Status bar */
   .status-bar {
-    display: flex;
-    gap: 24px;
-    padding: 12px 16px;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    margin-bottom: 32px;
-    animation: fadeIn 0.6s ease 0.2s both;
-    flex-wrap: wrap;
+    display: flex; gap: 24px; padding: 12px 16px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 4px; margin-bottom: 32px;
+    animation: fadeIn 0.6s ease 0.2s both; flex-wrap: wrap;
   }
 
-  .status-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-  }
-
+  .status-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
   .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green-dim);
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 8px var(--green-dim);
     animation: pulse 2s ease infinite;
   }
-
   .status-dot.degraded { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
   .status-dot.down { background: var(--red); box-shadow: 0 0 8px var(--red); animation: none; }
   .status-dot.loading { background: var(--text-dim); animation: none; }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
   .status-label { color: var(--text-dim); }
   .status-value { color: var(--text); }
 
-  /* Section headers */
   .section-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    color: var(--text-dim);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
   }
+  .section-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .section-header::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* Service cards */
-  .services {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 48px;
-  }
+  .services { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
 
   .service-card {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 20px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 4px; padding: 20px;
     transition: border-color 0.2s, background 0.2s;
     animation: slideUp 0.4s ease both;
   }
-
   .service-card:nth-child(1) { animation-delay: 0.3s; }
   .service-card:nth-child(2) { animation-delay: 0.4s; }
   .service-card:nth-child(3) { animation-delay: 0.5s; }
+  .service-card:nth-child(4) { animation-delay: 0.6s; }
 
-  .service-card:hover {
-    border-color: var(--border-active);
-    background: var(--bg-panel-hover);
-  }
+  .service-card:hover { border-color: var(--border-active); background: var(--bg-panel-hover); }
 
-  .service-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .service-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-bright);
-  }
+  .service-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .service-name { font-size: 15px; font-weight: 600; color: var(--text-bright); }
 
   .service-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    padding: 2px 10px;
-    border-radius: 2px;
-    background: rgba(74, 222, 128, 0.08);
-    color: var(--green);
+    display: flex; align-items: center; gap: 6px; font-size: 11px;
+    padding: 2px 10px; border-radius: 2px;
+    background: rgba(74, 222, 128, 0.08); color: var(--green);
     border: 1px solid rgba(74, 222, 128, 0.15);
   }
+  .service-status.loading { background: rgba(102, 102, 102, 0.08); color: var(--text-dim); border-color: rgba(102, 102, 102, 0.15); }
 
-  .service-status.loading {
-    background: rgba(102, 102, 102, 0.08);
-    color: var(--text-dim);
-    border-color: rgba(102, 102, 102, 0.15);
-  }
+  .service-desc { color: var(--text-dim); font-size: 12px; margin-bottom: 16px; line-height: 1.7; }
 
-  .service-desc {
-    color: var(--text-dim);
-    font-size: 12px;
-    margin-bottom: 16px;
-    line-height: 1.7;
-  }
+  .service-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+  .meta-item { font-size: 11px; }
+  .meta-label { color: var(--text-dim); margin-right: 6px; }
+  .meta-value { color: var(--cyan); }
+  .meta-value.price { color: var(--green); }
 
-  .service-meta {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  .meta-item {
+  .service-footer {
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
     font-size: 11px;
   }
+  .endpoint-url { color: var(--purple); word-break: break-all; }
+  .hit-counter { color: var(--text-dim); }
+  .hit-counter span { color: var(--cyan); }
 
-  .meta-label {
-    color: var(--text-dim);
-    margin-right: 6px;
-  }
-
-  .meta-value {
-    color: var(--cyan);
-  }
-
-  .meta-value.price {
-    color: var(--green);
-  }
-
-  .service-endpoint {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-    font-size: 11px;
-  }
-
-  .endpoint-url {
-    color: var(--purple);
-    word-break: break-all;
-  }
-
-  /* Live stats section */
   .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin-bottom: 48px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-bottom: 48px;
   }
-
   .stat-card {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 16px;
-    animation: slideUp 0.4s ease 0.6s both;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 4px; padding: 16px; animation: slideUp 0.4s ease 0.7s both;
   }
-
-  .stat-value {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-bright);
-    margin-bottom: 4px;
-  }
-
+  .stat-value { font-size: 24px; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
   .stat-value.green { color: var(--green); }
   .stat-value.cyan { color: var(--cyan); }
+  .stat-value.purple { color: var(--purple); }
+  .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
 
-  .stat-label {
-    font-size: 11px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+  .footer { border-top: 1px solid var(--border); padding-top: 24px; animation: fadeIn 0.6s ease 0.9s both; }
+  .footer-line { color: var(--text-dim); font-size: 11px; margin-bottom: 4px; }
+  .footer-line a { color: var(--text); text-decoration: none; }
+  .footer-line a:hover { color: var(--green); }
 
-  /* Footer */
-  .footer {
-    border-top: 1px solid var(--border);
-    padding-top: 24px;
-    animation: fadeIn 0.6s ease 0.8s both;
-  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-  .footer-line {
-    color: var(--text-dim);
-    font-size: 11px;
-    margin-bottom: 4px;
-  }
-
-  .footer-line a {
-    color: var(--text);
-    text-decoration: none;
-  }
-
-  .footer-line a:hover {
-    color: var(--green);
-  }
-
-  /* Animations */
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Responsive */
   @media (max-width: 600px) {
     .container { padding: 24px 16px; }
     .title { font-size: 24px; }
@@ -359,7 +172,6 @@
 
 <div class="container">
 
-  <!-- Header -->
   <div class="header">
     <div class="prompt-line">
       <span class="prompt-symbol">$</span>
@@ -367,10 +179,9 @@
       <span class="cursor"></span>
     </div>
     <h1 class="title">Get<span>Kin</span></h1>
-    <p class="subtitle">Agent infrastructure that runs itself. Model recommendations, availability monitoring, and LLM routing — built for autonomous agents, paid via x402.</p>
+    <p class="subtitle">Agent infrastructure that runs itself. Model recommendations, availability monitoring, LLM routing, and memory compression — built for autonomous agents, paid via x402.</p>
   </div>
 
-  <!-- Status bar -->
   <div class="status-bar" id="statusBar">
     <div class="status-item">
       <div class="status-dot loading" id="overallDot"></div>
@@ -379,7 +190,7 @@
     </div>
     <div class="status-item">
       <span class="status-label">services:</span>
-      <span class="status-value" id="serviceCount">3</span>
+      <span class="status-value" id="serviceCount">4</span>
     </div>
     <div class="status-item">
       <span class="status-label">uptime:</span>
@@ -391,7 +202,6 @@
     </div>
   </div>
 
-  <!-- Services -->
   <div class="section-header">Services</div>
   <div class="services">
 
@@ -399,31 +209,19 @@
     <div class="service-card">
       <div class="service-top">
         <div class="service-name">Model Pricing Oracle</div>
-        <div class="service-status loading" id="oracleStatus">
-          <div class="status-dot loading"></div>
-          checking
-        </div>
+        <div class="service-status loading" id="oracleStatus"><div class="status-dot loading"></div> checking</div>
       </div>
       <div class="service-desc">
         Returns the optimal LLM for any task based on cost, speed, and quality data across 13 models from 6 providers. Query with a task type, get back a ranked recommendation.
       </div>
       <div class="service-meta">
-        <div class="meta-item">
-          <span class="meta-label">price:</span>
-          <span class="meta-value price">$0.01 USDC</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">payment:</span>
-          <span class="meta-value">x402 / Solana</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">models tracked:</span>
-          <span class="meta-value">13</span>
-        </div>
+        <div class="meta-item"><span class="meta-label">price:</span><span class="meta-value price">$0.01 USDC</span></div>
+        <div class="meta-item"><span class="meta-label">payment:</span><span class="meta-value">x402 / Solana</span></div>
+        <div class="meta-item"><span class="meta-label">models tracked:</span><span class="meta-value">13</span></div>
       </div>
-      <div class="service-endpoint">
-        <span class="meta-label">endpoint:</span>
-        <span class="endpoint-url">https://getkin-api.fly.dev/models/recommend</span>
+      <div class="service-footer">
+        <span><span class="meta-label">endpoint:</span><span class="endpoint-url">getkin-api.fly.dev/models/recommend</span></span>
+        <span class="hit-counter">requests: <span id="oracleHits">--</span> · paid: <span id="oraclePaid">--</span></span>
       </div>
     </div>
 
@@ -431,31 +229,19 @@
     <div class="service-card">
       <div class="service-top">
         <div class="service-name">Availability Monitor</div>
-        <div class="service-status loading" id="monitorStatus">
-          <div class="status-dot loading"></div>
-          checking
-        </div>
+        <div class="service-status loading" id="monitorStatus"><div class="status-dot loading"></div> checking</div>
       </div>
       <div class="service-desc">
         Real-time availability and latency monitoring for LLM provider APIs. Check if an endpoint is up before you call it. Tracks Anthropic, OpenAI, Google, Mistral, DeepSeek, and Meta.
       </div>
       <div class="service-meta">
-        <div class="meta-item">
-          <span class="meta-label">price:</span>
-          <span class="meta-value price">$0.005 USDC</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">payment:</span>
-          <span class="meta-value">x402 / Solana</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">endpoints monitored:</span>
-          <span class="meta-value" id="monitorEndpoints">8</span>
-        </div>
+        <div class="meta-item"><span class="meta-label">price:</span><span class="meta-value price">$0.005 USDC</span></div>
+        <div class="meta-item"><span class="meta-label">payment:</span><span class="meta-value">x402 / Solana</span></div>
+        <div class="meta-item"><span class="meta-label">endpoints monitored:</span><span class="meta-value" id="monitorEndpoints">8</span></div>
       </div>
-      <div class="service-endpoint">
-        <span class="meta-label">endpoint:</span>
-        <span class="endpoint-url">https://getkin-monitor.fly.dev/status</span>
+      <div class="service-footer">
+        <span><span class="meta-label">endpoint:</span><span class="endpoint-url">getkin-monitor.fly.dev/status</span></span>
+        <span class="hit-counter">requests: <span id="monitorHits">--</span> · paid: <span id="monitorPaid">--</span></span>
       </div>
     </div>
 
@@ -463,37 +249,44 @@
     <div class="service-card">
       <div class="service-top">
         <div class="service-name">Routing Proxy</div>
-        <div class="service-status loading" id="proxyStatus">
-          <div class="status-dot loading"></div>
-          checking
-        </div>
+        <div class="service-status loading" id="proxyStatus"><div class="status-dot loading"></div> checking</div>
       </div>
       <div class="service-desc">
         Route LLM calls through GetKin. OpenAI-compatible API format. We forward to the provider, return the response, and take a thin margin. Logging and cost tracking included.
       </div>
       <div class="service-meta">
-        <div class="meta-item">
-          <span class="meta-label">margin:</span>
-          <span class="meta-value price">3%</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">payment:</span>
-          <span class="meta-value">x402 / Solana</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">providers:</span>
-          <span class="meta-value" id="proxyProviders">loading...</span>
-        </div>
+        <div class="meta-item"><span class="meta-label">margin:</span><span class="meta-value price">3%</span></div>
+        <div class="meta-item"><span class="meta-label">payment:</span><span class="meta-value">x402 / Solana</span></div>
+        <div class="meta-item"><span class="meta-label">providers:</span><span class="meta-value" id="proxyProviders">loading...</span></div>
       </div>
-      <div class="service-endpoint">
-        <span class="meta-label">endpoint:</span>
-        <span class="endpoint-url">https://getkin-proxy.fly.dev/v1/chat/completions</span>
+      <div class="service-footer">
+        <span><span class="meta-label">endpoint:</span><span class="endpoint-url">getkin-proxy.fly.dev/v1/chat/completions</span></span>
+        <span class="hit-counter">requests: <span id="proxyHits">--</span> · paid: <span id="proxyPaid">--</span></span>
+      </div>
+    </div>
+
+    <!-- Memory -->
+    <div class="service-card">
+      <div class="service-top">
+        <div class="service-name">Memory</div>
+        <div class="service-status loading" id="memoryStatus"><div class="status-dot loading"></div> checking</div>
+      </div>
+      <div class="service-desc">
+        Stateless memory compression for AI agents. Send a raw session dump, get back structured short-term, medium-term, and long-term memory. We never store your data. First 5 compressions free.
+      </div>
+      <div class="service-meta">
+        <div class="meta-item"><span class="meta-label">price:</span><span class="meta-value price">$0.03 USDC</span></div>
+        <div class="meta-item"><span class="meta-label">free tier:</span><span class="meta-value">5 compressions</span></div>
+        <div class="meta-item"><span class="meta-label">data policy:</span><span class="meta-value">stateless</span></div>
+      </div>
+      <div class="service-footer">
+        <span><span class="meta-label">endpoint:</span><span class="endpoint-url">getkin-memory.fly.dev/memory/compress</span></span>
+        <span class="hit-counter">requests: <span id="memoryHits">--</span> · paid: <span id="memoryPaid">--</span></span>
       </div>
     </div>
 
   </div>
 
-  <!-- Live Stats -->
   <div class="section-header">Network Stats</div>
   <div class="stats-grid">
     <div class="stat-card">
@@ -501,12 +294,20 @@
       <div class="stat-label">Services Online</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value cyan" id="statEndpoints">--</div>
-      <div class="stat-label">Endpoints Monitored</div>
+      <div class="stat-value cyan" id="statTotalRequests">--</div>
+      <div class="stat-label">Total Requests</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value" id="statAvgLatency">--</div>
-      <div class="stat-label">Avg Provider Latency</div>
+      <div class="stat-value purple" id="statPaidTx">--</div>
+      <div class="stat-label">Paid Transactions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statUniqueCallers">--</div>
+      <div class="stat-label">Unique Callers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statEndpoints">--</div>
+      <div class="stat-label">Endpoints Monitored</div>
     </div>
     <div class="stat-card">
       <div class="stat-value" id="statModels">--</div>
@@ -514,7 +315,6 @@
     </div>
   </div>
 
-  <!-- Footer -->
   <div class="footer">
     <div class="footer-line">
       <span class="prompt-symbol" style="color: var(--text-dim);">$</span>
@@ -522,31 +322,35 @@
     </div>
     <div class="footer-line">
       <a href="https://getkin-api.fly.dev/.well-known/agent.json">agent.json</a> ·
-      <a href="https://getkin-api.fly.dev/mcp/tools">mcp/tools</a> ·
-      <a href="https://getkin-monitor.fly.dev/info">monitor</a> ·
-      <a href="https://getkin-proxy.fly.dev/v1/models">models</a>
+      <a href="https://getkin-api.fly.dev/mcp/tools">oracle/mcp</a> ·
+      <a href="https://getkin-monitor.fly.dev/mcp/tools">monitor/mcp</a> ·
+      <a href="https://getkin-proxy.fly.dev/mcp/tools">proxy/mcp</a> ·
+      <a href="https://getkin-memory.fly.dev/mcp/tools">memory/mcp</a>
     </div>
     <div class="footer-line" style="margin-top: 8px; color: var(--text-dim);">
-      all services accept x402 payments via Solana USDC
+      all services accept x402 payments via Solana USDC · data refreshes every 60s
     </div>
   </div>
 
 </div>
 
 <script>
-  // Live status checks
   const services = [
-    { name: 'oracle', url: 'https://getkin-api.fly.dev/health', statusEl: 'oracleStatus' },
-    { name: 'monitor', url: 'https://getkin-monitor.fly.dev/health', statusEl: 'monitorStatus' },
-    { name: 'proxy', url: 'https://getkin-proxy.fly.dev/health', statusEl: 'proxyStatus' },
+    { name: 'oracle', url: 'https://getkin-api.fly.dev', statusEl: 'oracleStatus', hitsEl: 'oracleHits', paidEl: 'oraclePaid' },
+    { name: 'monitor', url: 'https://getkin-monitor.fly.dev', statusEl: 'monitorStatus', hitsEl: 'monitorHits', paidEl: 'monitorPaid' },
+    { name: 'proxy', url: 'https://getkin-proxy.fly.dev', statusEl: 'proxyStatus', hitsEl: 'proxyHits', paidEl: 'proxyPaid' },
+    { name: 'memory', url: 'https://getkin-memory.fly.dev', statusEl: 'memoryStatus', hitsEl: 'memoryHits', paidEl: 'memoryPaid' },
   ];
 
   let servicesUp = 0;
+  let totalRequests = 0;
+  let totalPaid = 0;
+  let totalUnique = 0;
 
   async function checkService(service) {
     const el = document.getElementById(service.statusEl);
     try {
-      const response = await fetch(service.url);
+      const response = await fetch(service.url + '/health');
       const data = await response.json();
 
       if (data.status === 'healthy') {
@@ -554,13 +358,11 @@
         el.className = 'service-status';
         servicesUp++;
 
-        // Extract extra data from specific services
         if (service.name === 'monitor' && data.endpoints_monitored) {
           document.getElementById('monitorEndpoints').textContent = data.endpoints_monitored;
           document.getElementById('statEndpoints').textContent = data.endpoints_monitored;
           if (data.last_check) {
-            const d = new Date(data.last_check);
-            document.getElementById('lastCheck').textContent = d.toLocaleTimeString();
+            document.getElementById('lastCheck').textContent = new Date(data.last_check).toLocaleTimeString();
           }
         }
 
@@ -577,24 +379,26 @@
     }
   }
 
-  async function fetchMonitorSummary() {
+  async function fetchPublicStats(service) {
     try {
-      const response = await fetch('https://getkin-monitor.fly.dev/health');
+      const response = await fetch(service.url + '/stats/public');
       const data = await response.json();
-      if (data.last_check) {
-        const d = new Date(data.last_check);
-        document.getElementById('lastCheck').textContent = d.toLocaleTimeString();
-      }
-    } catch (e) {}
+      document.getElementById(service.hitsEl).textContent = (data.total_requests || 0).toLocaleString();
+      document.getElementById(service.paidEl).textContent = (data.paid_transactions || 0).toLocaleString();
+      totalRequests += data.total_requests || 0;
+      totalPaid += data.paid_transactions || 0;
+      totalUnique += data.unique_callers || 0;
+    } catch (e) {
+      document.getElementById(service.hitsEl).textContent = '--';
+      document.getElementById(service.paidEl).textContent = '--';
+    }
   }
 
   async function fetchProxyModels() {
     try {
       const response = await fetch('https://getkin-proxy.fly.dev/v1/models');
       const data = await response.json();
-      if (data.data) {
-        document.getElementById('statModels').textContent = data.data.length;
-      }
+      if (data.data) document.getElementById('statModels').textContent = data.data.length;
     } catch (e) {
       document.getElementById('statModels').textContent = '--';
     }
@@ -602,47 +406,37 @@
 
   async function init() {
     servicesUp = 0;
+    totalRequests = 0;
+    totalPaid = 0;
+    totalUnique = 0;
 
-    // Check all services
     await Promise.all(services.map(s => checkService(s)));
+    await Promise.all(services.map(s => fetchPublicStats(s)));
+    await fetchProxyModels();
 
-    // Update overall status
     const dot = document.getElementById('overallDot');
     const status = document.getElementById('overallStatus');
-    document.getElementById('statServicesUp').textContent = servicesUp + '/3';
+    document.getElementById('statServicesUp').textContent = servicesUp + '/4';
+    document.getElementById('statTotalRequests').textContent = totalRequests.toLocaleString();
+    document.getElementById('statPaidTx').textContent = totalPaid.toLocaleString();
+    document.getElementById('statUniqueCallers').textContent = totalUnique.toLocaleString();
 
-    if (servicesUp === 3) {
+    if (servicesUp === 4) {
       dot.className = 'status-dot';
       status.textContent = 'all systems operational';
       document.getElementById('uptimeValue').textContent = '100%';
     } else if (servicesUp > 0) {
       dot.className = 'status-dot degraded';
       status.textContent = 'partial';
-      document.getElementById('uptimeValue').textContent = Math.round(servicesUp / 3 * 100) + '%';
+      document.getElementById('uptimeValue').textContent = Math.round(servicesUp / 4 * 100) + '%';
     } else {
       dot.className = 'status-dot down';
       status.textContent = 'offline';
       document.getElementById('uptimeValue').textContent = '0%';
     }
-
-    // Fetch extra data
-    await fetchProxyModels();
-
-    // Fetch avg latency from monitor health
-    try {
-      const r = await fetch('https://getkin-monitor.fly.dev/health');
-      const d = await r.json();
-      // We don't have avg latency in health, so show check interval
-      document.getElementById('statAvgLatency').textContent = '~250ms';
-    } catch (e) {
-      document.getElementById('statAvgLatency').textContent = '--';
-    }
   }
 
-  // Run on load
   init();
-
-  // Refresh every 60 seconds
   setInterval(init, 60000);
 </script>
 
