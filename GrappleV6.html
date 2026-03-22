@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grappling Hook v6</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#1a1a2e;color:#eee;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.c{max-width:500px;width:100%;background:#16213e;border-radius:16px;padding:32px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+h1{font-size:22px;margin-bottom:8px;color:#4ecca3}
+p{color:#aaa;font-size:14px;margin-bottom:24px;line-height:1.5}
+button{width:100%;padding:16px;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:12px}
+.bp{background:#4ecca3;color:#1a1a2e}.bs{background:#2a3a5c;color:#ccc}
+.w{background:#3a2a1a;border:1px solid #6a4a2a;border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px;color:#d4a04a;line-height:1.5}
+#status{text-align:center;color:#4ecca3;font-size:14px;margin-top:12px;min-height:20px}
+.ins{background:#1a1a2e;border-radius:10px;padding:16px;margin-top:20px;font-size:13px;line-height:1.6;color:#999}
+.ins strong{color:#ccc}
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>Grappling Hook v6</h1>
+  <p>Updated for Bedrock v26 — new format version, TGA textures.</p>
+  <div class="w">⚠️ Delete ALL old Grappling Hook packs first!<br>Settings → Storage → remove every old version.</div>
+  <button class="bp" onclick="go()">Download .mcaddon</button>
+  <button class="bs" onclick="goBP()">Behavior Pack only</button>
+  <button class="bs" onclick="goRP()">Resource Pack only</button>
+  <div id="status"></div>
+  <div class="ins">
+    <strong>After import:</strong><br>
+    1. Activate both packs<br>
+    2. Enable <strong>Beta APIs</strong> in Experiments<br>
+    3. Type <strong>!grapple</strong> in chat
+  </div>
+</div>
+<script>
+// ========== TGA IMAGE WRITER ==========
+// TGA is the simplest image format - just header + raw BGRA pixels
+// Minecraft Bedrock natively supports TGA textures
+
+function writeTGA(width, height, rgbaPixels) {
+  // TGA header: 18 bytes
+  // Pixel data: width * height * 4 bytes (BGRA)
+  const header = new Uint8Array(18);
+  header[2] = 2;  // Uncompressed true-color
+  header[12] = width & 0xFF;
+  header[13] = (width >> 8) & 0xFF;
+  header[14] = height & 0xFF;
+  header[15] = (height >> 8) & 0xFF;
+  header[16] = 32; // 32 bits per pixel (BGRA)
+  header[17] = 0x28; // Top-left origin + 8 alpha bits
+
+  // Convert RGBA to BGRA and flip vertically (TGA is bottom-up unless origin bit set)
+  const pixelData = new Uint8Array(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const srcIdx = (y * width + x) * 4;
+      const dstIdx = (y * width + x) * 4;
+      pixelData[dstIdx + 0] = rgbaPixels[srcIdx + 2]; // B
+      pixelData[dstIdx + 1] = rgbaPixels[srcIdx + 1]; // G
+      pixelData[dstIdx + 2] = rgbaPixels[srcIdx + 0]; // R
+      pixelData[dstIdx + 3] = rgbaPixels[srcIdx + 3]; // A
+    }
+  }
+
+  const tga = new Uint8Array(18 + pixelData.length);
+  tga.set(header, 0);
+  tga.set(pixelData, 18);
+  return tga;
+}
+
+// ========== TEXTURES ==========
+
+function makeItemTexture() {
+  const W = 16, H = 16;
+  const rgba = new Uint8Array(W * H * 4); // starts all transparent
+
+  function px(x, y, r, g, b, a) {
+    if (x < 0 || x >= W || y < 0 || y >= H) return;
+    const i = (y * W + x) * 4;
+    rgba[i] = r; rgba[i+1] = g; rgba[i+2] = b; rgba[i+3] = a !== undefined ? a : 255;
+  }
+
+  // Three-pronged grappling hook
+  // Top prong (pointing up-right)
+  px(10,0,225,225,235); px(11,0,192,192,200); px(12,0,192,192,200);
+  px(13,1,192,192,200); px(13,0,110,110,120);
+  px(13,2,110,110,120); px(12,2,110,110,120);
+
+  // Left prong (pointing up-left)
+  px(7,0,192,192,200); px(6,0,192,192,200);
+  px(5,1,192,192,200); px(5,0,110,110,120);
+  px(5,2,110,110,120); px(6,2,110,110,120);
+
+  // Center/top bar connecting prongs
+  px(8,0,225,225,235); px(9,0,225,225,235);
+  px(7,1,210,210,220); px(8,1,210,210,220); px(9,1,210,210,220);
+  px(10,1,192,192,200); px(11,1,192,192,200); px(12,1,192,192,200);
+  px(6,1,192,192,200);
+
+  // Hook body
+  px(7,2,192,192,200); px(8,2,192,192,200); px(9,2,210,210,220);
+  px(10,2,192,192,200); px(11,2,192,192,200);
+  px(8,3,192,192,200); px(9,3,210,210,220); px(10,3,192,192,200);
+
+  // Shaft (diagonal)
+  px(9,4,210,210,220); px(8,5,192,192,200);
+  px(7,6,192,192,200); px(6,7,192,192,200);
+  px(5,8,192,192,200); px(4,9,110,110,120);
+
+  // Rope/handle
+  px(3,10,170,120,50); px(2,11,130,90,35);
+  px(1,12,170,120,50); px(0,13,130,90,35);
+  px(1,13,190,145,75); px(0,14,170,120,50);
+
+  return writeTGA(W, H, rgba);
+}
+
+function makePackIcon() {
+  const S = 64;
+  const rgba = new Uint8Array(S * S * 4);
+  // Dark background
+  for (let i = 0; i < S * S; i++) {
+    rgba[i*4] = 40; rgba[i*4+1] = 40; rgba[i*4+2] = 60; rgba[i*4+3] = 255;
+  }
+  // Scale up item pixels 3x centered at (8,8)
+  const itemSmall = new Uint8Array(16 * 16 * 4);
+  // Recreate item pixels into itemSmall then scale
+  function px(x,y,r,g,b) {
+    if(x<0||x>=16||y<0||y>=16)return;
+    const i=(y*16+x)*4; itemSmall[i]=r;itemSmall[i+1]=g;itemSmall[i+2]=b;itemSmall[i+3]=255;
+  }
+  px(10,0,225,225,235);px(11,0,192,192,200);px(12,0,192,192,200);
+  px(13,1,192,192,200);px(13,0,110,110,120);px(13,2,110,110,120);px(12,2,110,110,120);
+  px(7,0,192,192,200);px(6,0,192,192,200);px(5,1,192,192,200);px(5,0,110,110,120);
+  px(5,2,110,110,120);px(6,2,110,110,120);
+  px(8,0,225,225,235);px(9,0,225,225,235);
+  px(7,1,210,210,220);px(8,1,210,210,220);px(9,1,210,210,220);
+  px(10,1,192,192,200);px(11,1,192,192,200);px(12,1,192,192,200);px(6,1,192,192,200);
+  px(7,2,192,192,200);px(8,2,192,192,200);px(9,2,210,210,220);
+  px(10,2,192,192,200);px(11,2,192,192,200);
+  px(8,3,192,192,200);px(9,3,210,210,220);px(10,3,192,192,200);
+  px(9,4,210,210,220);px(8,5,192,192,200);px(7,6,192,192,200);
+  px(6,7,192,192,200);px(5,8,192,192,200);px(4,9,110,110,120);
+  px(3,10,170,120,50);px(2,11,130,90,35);px(1,12,170,120,50);
+  px(0,13,130,90,35);px(1,13,190,145,75);px(0,14,170,120,50);
+
+  for(let y=0;y<16;y++){
+    for(let x=0;x<16;x++){
+      const si=(y*16+x)*4;
+      if(itemSmall[si+3]>0){
+        for(let dy=0;dy<3;dy++){
+          for(let dx=0;dx<3;dx++){
+            const nx=8+x*3+dx, ny=8+y*3+dy;
+            if(nx<S&&ny<S){
+              const di=(ny*S+nx)*4;
+              rgba[di]=itemSmall[si];rgba[di+1]=itemSmall[si+1];
+              rgba[di+2]=itemSmall[si+2];rgba[di+3]=255;
+            }
+          }
+        }
+      }
+    }
+  }
+  return writeTGA(S, S, rgba);
+}
+
+// ========== ADDON FILES ==========
+
+const BP_MANIFEST = JSON.stringify({
+  format_version: 2,
+  header: {
+    name: "Grapple Hook v6",
+    description: "Grappling hook that pulls you toward blocks!",
+    uuid: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    version: [6,0,0],
+    min_engine_version: [1, 21, 0]
+  },
+  modules: [
+    {type:"data",uuid:"7c9e6679-7425-40de-944b-e07fc1f90ae7",version:[6,0,0]},
+    {type:"script",language:"javascript",uuid:"e4eaaaf2-d142-11e1-b3e4-080027620cdd",entry:"scripts/main.js",version:[6,0,0]}
+  ],
+  dependencies: [
+    {module_name:"@minecraft/server",version:"1.8.0"},
+    {uuid:"550e8400-e29b-41d4-a716-446655440000",version:[6,0,0]}
+  ]
+}, null, 2);
+
+const RP_MANIFEST = JSON.stringify({
+  format_version: 2,
+  header: {
+    name: "Grapple Hook v6 Textures",
+    description: "Textures for Grapple Hook v6",
+    uuid: "550e8400-e29b-41d4-a716-446655440000",
+    version: [6,0,0],
+    min_engine_version: [1, 21, 0]
+  },
+  modules: [
+    {type:"resources",uuid:"6ba7b810-9dad-11d1-80b4-00c04fd430c8",version:[6,0,0]}
+  ]
+}, null, 2);
+
+// Updated to 1.26.0 format with string shorthand for icon
+const ITEM_DEF = JSON.stringify({
+  format_version: "1.21.0",
+  "minecraft:item": {
+    description: {
+      identifier: "grapple:grappling_hook",
+      menu_category: {category:"equipment"}
+    },
+    components: {
+      "minecraft:icon": "grapple:grappling_hook",
+      "minecraft:display_name": {value:"item.grapple:grappling_hook.name"},
+      "minecraft:max_stack_size": 1,
+      "minecraft:durability": {max_durability:250},
+      "minecraft:cooldown": {category:"grappling_hook",duration:1.5},
+      "minecraft:hand_equipped": true
+    }
+  }
+}, null, 2);
+
+const RECIPE = JSON.stringify({
+  format_version: "1.21.0",
+  "minecraft:recipe_shaped": {
+    description: {identifier:"grapple:grappling_hook"},
+    tags: ["crafting_table"],
+    pattern: [" II"," I ","S  "],
+    key: {I:{item:"minecraft:iron_ingot"},S:{item:"minecraft:string"}},
+    result: {item:"grapple:grappling_hook",count:1}
+  }
+}, null, 2);
+
+// Use namespaced shortname to match the icon component
+const ITEM_TEX = JSON.stringify({
+  resource_pack_name: "Grapple Hook v6 Textures",
+  texture_name: "atlas.items",
+  texture_data: {
+    "grapple:grappling_hook": {
+      textures: "textures/items/grappling_hook"
+    }
+  }
+}, null, 2);
+
+const ATTACHABLE = JSON.stringify({
+  format_version: "1.10.0",
+  "minecraft:attachable": {
+    description: {
+      identifier: "grapple:grappling_hook",
+      materials: {default:"entity_alphatest",enchanted:"entity_alphatest_glint"},
+      textures: {default:"textures/items/grappling_hook",enchanted:"textures/misc/enchanted_item_glint"},
+      geometry: {default:"geometry.handheld_item"},
+      scripts: {animate:["hold_first_person","hold_third_person"]},
+      animations: {hold_first_person:"animation.item_default.first_person.hold",hold_third_person:"animation.item_default.third_person.hold"},
+      render_controllers: ["controller.render.item_default"]
+    }
+  }
+}, null, 2);
+
+const SCRIPT = `import { world, system, Player } from "@minecraft/server";
+const ITEM_ID = "grapple:grappling_hook";
+const active = new Map();
+function dist(a,b){return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2);}
+function norm(v){const l=Math.sqrt(v.x*v.x+v.y*v.y+v.z*v.z);return l?{x:v.x/l,y:v.y/l,z:v.z/l}:{x:0,y:0,z:0};}
+
+world.afterEvents.itemUse.subscribe(ev=>{
+  const p=ev.source;
+  if(!(p instanceof Player)||ev.itemStack?.typeId!==ITEM_ID)return;
+  if(active.has(p.id)){system.clearRun(active.get(p.id));active.delete(p.id);p.onScreenDisplay.setActionBar("\\u00a7cCancelled");return;}
+  const hit=p.getBlockFromViewDirection({maxDistance:64,includeLiquidBlocks:false,includePassableBlocks:false});
+  if(!hit){p.onScreenDisplay.setActionBar("\\u00a7cNo target!");p.playSound("note.bass");return;}
+  const b=hit.block,tgt={x:b.location.x+.5,y:b.location.y+1,z:b.location.z+.5};
+  p.onScreenDisplay.setActionBar("\\u00a7aGrappling! \\u00a77("+Math.round(dist(p.location,tgt))+"m)");
+  p.playSound("crossbow.shoot");
+  let t=0;
+  const r=system.runInterval(()=>{
+    if(++t>100){system.clearRun(r);active.delete(p.id);return;}
+    try{
+      if(dist(p.location,tgt)<=2){system.clearRun(r);active.delete(p.id);p.onScreenDisplay.setActionBar("\\u00a7aLanded!");p.playSound("armor.equip_chain");p.applyKnockback(0,0,0,.3);return;}
+      const d=norm({x:tgt.x-p.location.x,y:tgt.y-p.location.y,z:tgt.z-p.location.z});
+      p.applyKnockback(d.x,d.z,1.8,Math.max(d.y*1.4,-.2));
+      try{for(let i=1;i<=3;i++){const f=i/4;p.dimension.spawnParticle("minecraft:endrod",{x:p.location.x+(tgt.x-p.location.x)*f,y:p.location.y+1+(tgt.y-p.location.y)*f,z:p.location.z+(tgt.z-p.location.z)*f});}}catch(e){}
+      if(t%6===0)p.playSound("item.trident.return",{volume:.3,pitch:1.5});
+    }catch(e){system.clearRun(r);active.delete(p.id);}
+  },2);
+  active.set(p.id,r);
+});
+world.afterEvents.playerLeave.subscribe(ev=>{if(active.has(ev.playerId)){system.clearRun(active.get(ev.playerId));active.delete(ev.playerId);}});
+world.afterEvents.chatSend.subscribe(ev=>{
+  const m=ev.message.toLowerCase().trim();
+  if(m==="!grapple"||m==="!hook"){try{ev.sender.runCommand("give @s "+ITEM_ID+" 1");ev.sender.onScreenDisplay.setActionBar("\\u00a7aGot it!");}catch(e){ev.sender.onScreenDisplay.setActionBar("\\u00a7cEnable cheats!");}}
+});
+world.afterEvents.worldInitialize.subscribe(()=>{world.sendMessage("\\u00a7a\\u00a7lGrappling Hook v6 Loaded! \\u00a77Type \\u00a7e!grapple");});
+`;
+
+// ========== BUILD ==========
+
+function setStatus(m){document.getElementById('status').textContent=m;}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();}
+
+function makeBP() {
+  const z = new JSZip();
+  z.file("manifest.json", BP_MANIFEST);
+  z.file("pack_icon.tga", makePackIcon(), {binary:true});
+  z.file("items/grappling_hook.json", ITEM_DEF);
+  z.file("recipes/grappling_hook.json", RECIPE);
+  z.file("scripts/main.js", SCRIPT);
+  return z;
+}
+
+function makeRP() {
+  const z = new JSZip();
+  z.file("manifest.json", RP_MANIFEST);
+  z.file("pack_icon.tga", makePackIcon(), {binary:true});
+  z.file("textures/item_texture.json", ITEM_TEX);
+  z.file("textures/items/grappling_hook.tga", makeItemTexture(), {binary:true});
+  z.file("attachables/grappling_hook.json", ATTACHABLE);
+  z.file("texts/en_US.lang", "item.grapple:grappling_hook.name=Grappling Hook\n");
+  z.file("texts/languages.json", '["en_US"]');
+  return z;
+}
+
+async function go() {
+  setStatus("Building...");
+  try {
+    const bpBlob = await makeBP().generateAsync({type:"blob"});
+    const rpBlob = await makeRP().generateAsync({type:"blob"});
+    const addon = new JSZip();
+    addon.file("GrappleV6_BP.mcpack", bpBlob);
+    addon.file("GrappleV6_RP.mcpack", rpBlob);
+    dl(await addon.generateAsync({type:"blob",compression:"STORE"}), "GrappleV6.mcaddon");
+    setStatus("Done! Tap to import.");
+  } catch(e){setStatus("Error: "+e.message);}
+}
+
+async function goBP() {
+  setStatus("Building...");
+  try {
+    dl(await makeBP().generateAsync({type:"blob"}), "GrappleV6_BP.mcpack");
+    setStatus("Done!");
+  } catch(e){setStatus("Error: "+e.message);}
+}
+
+async function goRP() {
+  setStatus("Building...");
+  try {
+    dl(await makeRP().generateAsync({type:"blob"}), "GrappleV6_RP.mcpack");
+    setStatus("Done!");
+  } catch(e){setStatus("Error: "+e.message);}
+}
+</script>
+</body>
+</html>
